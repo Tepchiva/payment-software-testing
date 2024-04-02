@@ -14,8 +14,8 @@ public enum MessageResponseCode {
     CURRENCY_NOT_SUPPORTED("ERR-003", "Currency [%s] not supported", HttpStatus.BAD_REQUEST),
     CARD_NOT_DEBITED("ERR-004", "Card not debited for customer [%s]", HttpStatus.BAD_REQUEST),
     AMOUNT_BELOW_MINIMUM("ERR-005", "Amount must be at least [%s]c", HttpStatus.BAD_REQUEST),
-    FAILED_PAYMENT("ERR-006", "Failed to process payment", HttpStatus.EXPECTATION_FAILED)
-    ;
+    FAILED_PAYMENT("ERR-006", "Failed to process payment", HttpStatus.EXPECTATION_FAILED),
+    PHONE_NUMBER_NOT_VALID("ERR-007", "Phone number [%s] is not valid", HttpStatus.BAD_REQUEST);
     private final String code;
     private final String message;
     private final HttpStatus httpStatus;

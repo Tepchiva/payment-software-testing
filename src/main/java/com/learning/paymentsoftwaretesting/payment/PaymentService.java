@@ -48,7 +48,5 @@ public class PaymentService {
 
         // ... insert payment
         paymentRepository.save(PaymentMapper.INSTANCE.mapToPayment(paymentRequest));
-
-        // ... send email
     }
 }

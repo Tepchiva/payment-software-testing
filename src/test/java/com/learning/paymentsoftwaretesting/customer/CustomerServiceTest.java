@@ -3,6 +3,7 @@ package com.learning.paymentsoftwaretesting.customer;
 import com.learning.paymentsoftwaretesting.constant.MessageResponseCode;
 import com.learning.paymentsoftwaretesting.exception.AppException;
 import com.learning.paymentsoftwaretesting.mapper.CustomerMapper;
+import com.learning.paymentsoftwaretesting.utils.PhoneNumberValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,8 @@ class CustomerServiceTest {
 
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private PhoneNumberValidator phoneNumberValidator;
 
     private CustomerService underTest;
     private ArgumentCaptor<Customer> customerArgumentCaptor;
@@ -30,7 +33,7 @@ class CustomerServiceTest {
         // replace with @ExtendWith(MockitoExtension.class)
         // this.autoCloseable = MockitoAnnotations.openMocks(this);
 
-        this.underTest = new CustomerService(customerRepository);
+        this.underTest = new CustomerService(customerRepository, phoneNumberValidator);
         this.customerArgumentCaptor = ArgumentCaptor.forClass(Customer.class);
     }
 
@@ -57,7 +60,7 @@ class CustomerServiceTest {
 
         // ... No customer with phone number passed
         given(customerRepository.findCustomerByPhoneNo(registrationRequest.phoneNo())).willReturn(Optional.empty());
-
+        given(phoneNumberValidator.test(registrationRequest.phoneNo())).willReturn(true);
 
         // When
         underTest.registerNewCustomer(registrationRequest);
@@ -89,6 +92,7 @@ class CustomerServiceTest {
 
         // ... Exist customer with phone number passed
         given(customerRepository.findCustomerByPhoneNo(registrationRequest.phoneNo())).willReturn(Optional.of(CustomerMapper.INSTANCE.mapToCustomer(registrationRequest)));
+        given(phoneNumberValidator.test(registrationRequest.phoneNo())).willReturn(true);
 
         // When
         underTest.registerNewCustomer(registrationRequest);
@@ -110,6 +114,7 @@ class CustomerServiceTest {
 
         // ... Exist customer with phone number passed
         given(customerRepository.findCustomerByPhoneNo(registrationRequest.phoneNo())).willReturn(Optional.of(existCustomer));
+        given(phoneNumberValidator.test(registrationRequest.phoneNo())).willReturn(true);
 
         // When
         // Then
@@ -127,6 +132,7 @@ class CustomerServiceTest {
 
         // ... Exist customer with phone number passed
         given(customerRepository.findCustomerByPhoneNo(existCustomer.getPhoneNo())).willReturn(Optional.of(existCustomer));
+        given(phoneNumberValidator.test(existCustomer.getPhoneNo())).willReturn(true);
 
         // When
         CustomerResponse customerResponse = underTest.getCustomerByPhoneNo(existCustomer.getPhoneNo());
@@ -147,7 +153,7 @@ class CustomerServiceTest {
 
         // ... No customer with phone number passed
         given(customerRepository.findCustomerByPhoneNo(phoneNo)).willReturn(Optional.empty());
-
+        given(phoneNumberValidator.test(phoneNo)).willReturn(true);
         // When
         // Then
         assertThatThrownBy(() -> underTest.getCustomerByPhoneNo(phoneNo))
@@ -155,5 +161,21 @@ class CustomerServiceTest {
                 .hasMessageContaining(MessageResponseCode.RESOURCE_NOT_FOUND.getMessage().formatted("Customer"));
 
         then(customerRepository).should().findCustomerByPhoneNo(phoneNo);
+    }
+
+    @Test
+    void shouldThrownExceptionWhenPhoneNoIsNotValid() {
+        // Given
+        String phoneNo = "010384766";
+
+        // ... No customer with phone number passed
+        given(phoneNumberValidator.test(phoneNo)).willReturn(false);
+        // When
+        // Then
+        assertThatThrownBy(() -> underTest.getCustomerByPhoneNo(phoneNo))
+                .isInstanceOf(AppException.class)
+                .hasMessageContaining(MessageResponseCode.PHONE_NUMBER_NOT_VALID.getMessage().formatted(phoneNo));
+
+        then(customerRepository).shouldHaveNoInteractions();
     }
 }
