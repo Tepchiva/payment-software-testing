@@ -15,8 +15,6 @@
     <description>payment-software-testing</description>
     <properties>
         <java.version>21</java.version>
-        <sonar.organization>tepchiva</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <jacoco.version>0.8.11</jacoco.version>
     </properties>
     <dependencies>
@@ -34,7 +32,6 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -50,7 +47,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Swagger Dependencies -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
@@ -70,6 +66,11 @@
             <groupId>com.stripe</groupId>
             <artifactId>stripe-java</artifactId>
             <version>24.22.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.11.0.3922</version>
         </dependency>
         <dependency>
             <groupId>org.jacoco</groupId>
@@ -112,14 +113,5 @@
                 </executions>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.sonarsource.scanner.maven</groupId>
-                    <artifactId>sonar-maven-plugin</artifactId>
-                    <version>3.7.0.1746</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 </project>
