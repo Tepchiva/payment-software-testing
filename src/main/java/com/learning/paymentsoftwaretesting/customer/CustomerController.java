@@ -1,11 +1,10 @@
 package com.learning.paymentsoftwaretesting.customer;
 
+import com.learning.paymentsoftwaretesting.exception.SuccessResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController {
     private final CustomerService customerService;
 
-    @PostMapping("/registration")
-    public void registerNewCustomer(@RequestBody @Validated CustomerRegistrationRequest request) {
-        customerService.registerNewCustomer(request);
+    @PutMapping("/registration")
+    public ResponseEntity<SuccessResponse<CustomerResponse>> registerNewCustomer(@RequestBody @Validated CustomerRegistrationRequest request) {
+        return ResponseEntity.ok(new SuccessResponse<>(customerService.registerNewCustomer(request)));
     }
 }

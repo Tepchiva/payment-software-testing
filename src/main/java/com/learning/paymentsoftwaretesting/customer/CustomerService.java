@@ -7,6 +7,8 @@ import com.learning.paymentsoftwaretesting.utils.PhoneNumberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -14,21 +16,23 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final PhoneNumberValidator phoneNumberValidator;
 
-    public void registerNewCustomer(CustomerRegistrationRequest customerRegistrationRequest) {
+    public CustomerResponse registerNewCustomer(CustomerRegistrationRequest customerRegistrationRequest) {
 
         phoneNumberValidator(customerRegistrationRequest.phoneNo());
 
         customerRepository
                 .findCustomerByPhoneNo(customerRegistrationRequest.phoneNo())
-                .ifPresentOrElse(
+                .ifPresent(
                         customer -> {
                             if (customer.getName().equalsIgnoreCase(customerRegistrationRequest.name())) {
-                                return;
+                                throw new AppException(MessageResponseCode.CUSTOMER_ALREADY_REGISTERED, customer.getName());
                             }
                             throw new AppException(MessageResponseCode.PHONE_NUMBER_ALREADY_REGISTERED, customer.getPhoneNo());
-                        },
-                        () -> customerRepository.save(CustomerMapper.INSTANCE.mapToCustomer(customerRegistrationRequest))
+                        }
                 );
+
+        Customer customer = customerRepository.save(CustomerMapper.INSTANCE.mapToCustomer(customerRegistrationRequest));
+        return CustomerMapper.INSTANCE.mapToCustomerResponse(customer);
     }
 
     private void phoneNumberValidator(String phoneNumber) {

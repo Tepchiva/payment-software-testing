@@ -12,11 +12,17 @@ import com.stripe.param.ChargeCreateParams;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 @Service
 @Slf4j
+@ConditionalOnProperty(
+        value = "stripe.enabled",
+        havingValue = "true",
+        matchIfMissing = false
+)
 public class StripeService implements CardPaymentCharger {
 
     private final StripeApi stripeApi;

@@ -20,7 +20,7 @@ public class PaymentService {
 
     private static final List<Currency> ACCEPTED_CURRENCIES = List.of(Currency.USD, Currency.GBP);
 
-    void chargeCard(PaymentRequest paymentRequest) {
+    PaymentResponse chargeCard(PaymentRequest paymentRequest) {
         log.info("Charging card for payment request: {}", paymentRequest);
 
         // ... find customer
@@ -47,6 +47,13 @@ public class PaymentService {
         }
 
         // ... insert payment
-        paymentRepository.save(PaymentMapper.INSTANCE.mapToPayment(paymentRequest));
+        Payment payment = paymentRepository.save(PaymentMapper.INSTANCE.mapToPayment(paymentRequest));
+        return PaymentMapper.INSTANCE.mapToPaymentResponse(payment);
+    }
+
+    public PaymentResponse getPayment(Long id) {
+        return paymentRepository.findById(id)
+                .map(PaymentMapper.INSTANCE::mapToPaymentResponse)
+                .orElseThrow(() -> new AppException(MessageResponseCode.RESOURCE_NOT_FOUND, "Payment"));
     }
 }

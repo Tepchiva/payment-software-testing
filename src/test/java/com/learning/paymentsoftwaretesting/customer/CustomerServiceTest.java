@@ -95,10 +95,12 @@ class CustomerServiceTest {
         given(phoneNumberValidator.test(registrationRequest.phoneNo())).willReturn(true);
 
         // When
-        underTest.registerNewCustomer(registrationRequest);
-
         // Then
-        then(customerRepository).should(never()).save(any());
+        assertThatThrownBy(() -> underTest.registerNewCustomer(registrationRequest))
+                .isInstanceOf(AppException.class)
+                .hasMessageContaining(MessageResponseCode.CUSTOMER_ALREADY_REGISTERED.getMessage(), registrationRequest.name());
+
+        then(customerRepository).shouldHaveNoMoreInteractions();
     }
 
     @Test

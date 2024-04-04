@@ -120,16 +120,19 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
+            <id>tdd</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <spring.profiles.active>dev</spring.profiles.active>
+                <spring.profiles.active>tdd</spring.profiles.active>
             </properties>
         </profile>
         <profile>
             <id>uat</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
             <properties>
                 <spring.profiles.active>uat</spring.profiles.active>
             </properties>

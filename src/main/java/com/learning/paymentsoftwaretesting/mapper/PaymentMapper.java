@@ -2,6 +2,7 @@ package com.learning.paymentsoftwaretesting.mapper;
 
 import com.learning.paymentsoftwaretesting.payment.Payment;
 import com.learning.paymentsoftwaretesting.payment.PaymentRequest;
+import com.learning.paymentsoftwaretesting.payment.PaymentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -16,4 +17,5 @@ public interface PaymentMapper {
     @Mapping(target = "id", ignore = true)
     Payment mapToPayment(PaymentRequest paymentRequest);
 
+    PaymentResponse mapToPaymentResponse(Payment payment);
 }
