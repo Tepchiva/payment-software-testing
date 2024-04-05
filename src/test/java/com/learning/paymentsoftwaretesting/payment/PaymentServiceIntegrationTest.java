@@ -1,7 +1,5 @@
 package com.learning.paymentsoftwaretesting.payment;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.paymentsoftwaretesting.constant.MessageResponseCode;
 import com.learning.paymentsoftwaretesting.customer.CustomerRegistrationRequest;
 import com.learning.paymentsoftwaretesting.customer.CustomerResponse;
@@ -9,46 +7,57 @@ import com.learning.paymentsoftwaretesting.exception.SuccessResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@Testcontainers
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
+@Transactional
 class PaymentServiceIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private TestRestTemplate restTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.0");
 
     @Test
-    void shouldCreatePaymentSuccessfully() throws Exception {
+    void connectionEstablished() {
+        assertThat(postgres.isCreated()).isTrue();
+        assertThat(postgres.isRunning()).isTrue();
+    }
+
+    @Test
+    void shouldCreatePaymentSuccessfully() {
         // Given
         CustomerRegistrationRequest customerRegistrationRequest = new CustomerRegistrationRequest(
                 "chiva",
                 "+85510337766",
-                "em@gmail.com"
+                ""
         );
 
         // ... Register customer and expect success with status 200
-        ResultActions customerRegisterResultActions = mockMvc.perform(
-                put("/v1/customers/registration")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(customerRegistrationRequest))
-        ).andExpect(status().isOk());
-
-        String customerDataAsString = customerRegisterResultActions.andReturn().getResponse().getContentAsString();
-        SuccessResponse<CustomerResponse> responseSuccessResponse = objectMapper.readValue(customerDataAsString, new TypeReference<>() {});
-        log.info("success response type of customer: {}", responseSuccessResponse);
-        CustomerResponse customerResponse = responseSuccessResponse.data();
+        ResponseEntity<SuccessResponse<CustomerResponse>> customerResponseEntity = restTemplate.exchange(
+                "/v1/customers/registration",
+                HttpMethod.PUT,
+                new HttpEntity<>(customerRegistrationRequest),
+                new ParameterizedTypeReference<>() {}
+        );
+        // ... Expect success with status 201 (created)
+        assertThat(customerResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        CustomerResponse customerResponse = Objects.requireNonNull(customerResponseEntity.getBody()).data();
 
         // ... Payment request
         PaymentRequest paymentRequest = new PaymentRequest(
@@ -60,29 +69,35 @@ class PaymentServiceIntegrationTest {
         );
 
         // When payment is sent
-        ResultActions paymentResultActions = mockMvc.perform(
-                post("/v1/payments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(paymentRequest))
+        ResponseEntity<SuccessResponse<PaymentResponse>> paymentResponseEntity = restTemplate.exchange(
+                "/v1/payments",
+                HttpMethod.POST,
+                new HttpEntity<>(paymentRequest),
+                new ParameterizedTypeReference<>() {}
         );
 
-        // Then expect success with data id not empty
-        paymentResultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.code").value(MessageResponseCode.SUCCESS.getCode()))
-                .andExpect(jsonPath("$.data.id").isNotEmpty());
+        // ... Expect success with status 200
+        assertThat(paymentResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        SuccessResponse<PaymentResponse> paymentResponseSuccessResponse = paymentResponseEntity.getBody();
+        // ... Expect response code is SUC-000
+        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse).code()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
+        // ... Expect data id is not id
+        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse.data()).id()).isNotNull();
 
-        String paymentDataAsString = paymentResultActions.andReturn().getResponse().getContentAsString();
-        SuccessResponse<PaymentResponse> paymentResponseSuccessResponse = objectMapper.readValue(paymentDataAsString, new TypeReference<>() {});
-        log.info("success response type of payment: {}", paymentResponseSuccessResponse);
-        PaymentResponse paymentResponse = paymentResponseSuccessResponse.data();
+        // ... Find payment just make
+        ResponseEntity<SuccessResponse<PaymentResponse>> getPaymentResponseEntity = restTemplate.exchange(
+                "/v1/payments/{id}",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {},
+                Objects.requireNonNull(paymentResponseSuccessResponse.data()).id()
+        );
 
-        // ... Find payment in database
-        ResultActions getPaymentResultActions = mockMvc.perform(get("/v1/payments/{id}", paymentResponse.id()));
-        getPaymentResultActions
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.code").value(MessageResponseCode.SUCCESS.getCode()));
+        // ... Expect success with status 200
+        assertThat(getPaymentResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        SuccessResponse<PaymentResponse> getPaymentResponseSuccessResponse = getPaymentResponseEntity.getBody();
+        // ... Expect response code is SUC-000
+        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse).code()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
+        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse.data()).id()).isEqualTo(Objects.requireNonNull(paymentResponseSuccessResponse.data()).id());
     }
 }
