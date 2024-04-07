@@ -2,15 +2,35 @@ receivers:
   otlp:
     protocols:
       http:
+      grpc:
 
 processors:
+  # batch metrics before sending to reduce API usage
   batch:
+    send_batch_max_size: 1000
+    send_batch_size: 100
+    timeout: 10s
 
 exporters:
+  # prometheus scrape metrics from the otlp collector
   prometheus:
     endpoint: "0.0.0.0:8889"
+    enable_open_metrics: true
     const_labels:
       service: "prometheus-exporter"
+
+  # otlp collector export traces to Jaeger
+  # Jaeger supports OTLP directly. The default port for OTLP/gRPC is 4317
+  otlp/jaeger:
+    endpoint: jaeger-all-in-one:4317
+    tls:
+      insecure: true
+  
+  logging:
+    loglevel: debug
+
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
 
 # https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/README.md
 extensions:
@@ -28,3 +48,11 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/jaeger]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [loki]
