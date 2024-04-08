@@ -1,10 +1,9 @@
-/*
-
 package com.learning.paymentsoftwaretesting.config;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
 import io.opentelemetry.sdk.logs.LogRecordProcessor;
@@ -18,30 +17,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-
-// Currently, not use lockback for logging, use log4j2 instead
-// If want to use it, need to add logback-spring.xml in resources, and add this @configuration
-
-<dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-logback-appender-1.0</artifactId>
-    <version>2.2.0-alpha</version>
-</dependency>
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-    <appender name="OPEN_TELEMETRY"
-              class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-        <captureExperimentalAttributes>true</captureExperimentalAttributes>
-        <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
-    </appender>
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="OPEN_TELEMETRY"/>
-    </root>
-</configuration>
 
 @Configuration
 public class OpenTelemetryConfig {
@@ -79,6 +54,3 @@ public class OpenTelemetryConfig {
                 .build();
     }
 }
-
-
- */

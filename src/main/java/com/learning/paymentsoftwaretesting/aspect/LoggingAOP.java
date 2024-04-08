@@ -4,20 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.micrometer.tracing.Span;
-import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.CodeSignature;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @RequiredArgsConstructor
 @Aspect
@@ -25,25 +21,19 @@ import java.util.Objects;
 @Slf4j
 public class LoggingAOP {
 
-    private final Tracer tracer;
+    @Around(
+            "execution(* com.learning.paymentsoftwaretesting..*(..))"
+            +" && !execution(* com.learning.paymentsoftwaretesting.config..*(..))"
+            +" && !execution(* com.learning.paymentsoftwaretesting.exception..*(..))"
+    )
+    public Object logAroundAnyMethods(ProceedingJoinPoint joinPoint) throws Throwable {
+        this.logRequest(joinPoint);
+        // Execute method
+        Object result = joinPoint.proceed();
 
-    @Around("execution(* com.learning.paymentsoftwaretesting..*(..)) && !execution(* com.learning.paymentsoftwaretesting.config..*(..))")
-    public Object logAroundAnyMethods(ProceedingJoinPoint joinPoint) throws Throwable{
-        Span span = tracer.currentSpan();
-        if (span != null) {
-            MDC.put("TRACE_ID", Objects.requireNonNull(tracer.currentTraceContext().context()).spanId());
+        this.logResponse(joinPoint, result);
 
-            this.logRequest(joinPoint);
-            // Execute method
-            Object result = joinPoint.proceed();
-
-            this.logResponse(joinPoint, result);
-
-            return result;
-        }
-        else {
-            return joinPoint.proceed();
-        }
+        return result;
     }
 
     private void logRequest(ProceedingJoinPoint joinPoint) {

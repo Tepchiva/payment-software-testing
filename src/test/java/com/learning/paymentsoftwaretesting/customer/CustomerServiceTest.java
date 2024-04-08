@@ -33,7 +33,7 @@ class CustomerServiceTest {
         // replace with @ExtendWith(MockitoExtension.class)
         // this.autoCloseable = MockitoAnnotations.openMocks(this);
 
-        this.underTest = new CustomerService(customerRepository, phoneNumberValidator);
+        this.underTest = new CustomerService(customerRepository, phoneNumberValidator, null);
         this.customerArgumentCaptor = ArgumentCaptor.forClass(Customer.class);
     }
 
