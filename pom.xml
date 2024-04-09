@@ -152,12 +152,12 @@
 
     <profiles>
         <profile>
-            <id>tdd</id>
+            <id>dev</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <spring.profiles.active>tdd</spring.profiles.active>
+                <spring.profiles.active>dev</spring.profiles.active>
             </properties>
         </profile>
         <profile>
