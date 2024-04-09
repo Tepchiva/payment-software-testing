@@ -8,7 +8,6 @@ import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -16,12 +15,11 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final PhoneNumberValidator phoneNumberValidator;
-    private final Tracer tracer;
 
     public CustomerResponse registerNewCustomer(CustomerRegistrationRequest customerRegistrationRequest) {
 
-        Objects.requireNonNull(tracer.currentSpan()).tag("phone_no", customerRegistrationRequest.phoneNo());
         MDC.put("email", customerRegistrationRequest.email());
+        MDC.put("phone_no", customerRegistrationRequest.phoneNo());
 
         phoneNumberValidator(customerRegistrationRequest.phoneNo());
 

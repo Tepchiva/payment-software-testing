@@ -2,14 +2,17 @@ package com.learning.paymentsoftwaretesting.aspect;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.learning.paymentsoftwaretesting.exception.SuccessResponse;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.CodeSignature;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -21,25 +24,31 @@ import java.util.Map;
 @Slf4j
 public class LoggingAOP {
 
+    private final Tracer tracer;
+    private final ObjectMapper mapper;
+    private static final String JSON_PARSE_ERROR = "Jackson failed converting data to JSON String: %s";
+
+    @AfterReturning(
+            pointcut = "execution(* com.learning.paymentsoftwaretesting..*(..))"
+            +" && !execution(* com.learning.paymentsoftwaretesting.config..*(..))"
+            +" && !execution(* com.learning.paymentsoftwaretesting.exception..*(..))"
+            , returning = "responseResult"
+    )
+    public void setTraceResponse(Object responseResult) {
+        if (responseResult instanceof ResponseEntity<?> responseEntityInstance && responseEntityInstance.getBody() instanceof SuccessResponse<?> successResponseInstance) {
+            Span span = tracer.currentSpan();
+            if (span != null) {
+                successResponseInstance.setTraceId(span.context().traceId());
+            }
+        }
+    }
+
     @Around(
             "execution(* com.learning.paymentsoftwaretesting..*(..))"
             +" && !execution(* com.learning.paymentsoftwaretesting.config..*(..))"
-            +" && !execution(* com.learning.paymentsoftwaretesting.exception..*(..))"
     )
     public Object logAroundAnyMethods(ProceedingJoinPoint joinPoint) throws Throwable {
-        this.logRequest(joinPoint);
-        // Execute method
-        Object result = joinPoint.proceed();
-
-        this.logResponse(joinPoint, result);
-
-        return result;
-    }
-
-    private void logRequest(ProceedingJoinPoint joinPoint) {
         String[] parameterNames = ((CodeSignature) joinPoint.getSignature()).getParameterNames();
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
         Map<String, String> requestData = new HashMap<>();
 
         /// Loop through each params and extract its name and value
@@ -49,47 +58,33 @@ public class LoggingAOP {
                 if (paramName.equals("codeSignature") || paramName.equals("context") || paramName.equals("typeReference")) {
                     continue;
                 }
-
                 String paramValue = mapper.writeValueAsString(joinPoint.getArgs()[i]);
                 requestData.put(paramName, paramValue);
             } catch (JsonProcessingException e) {
-                log.error("Jackson failed converting data to JSON String: " + e.getMessage());
+                log.error(JSON_PARSE_ERROR.formatted(e.getMessage()));
             }
         }
 
-        /// Prepare data into "request"
-        Map<String, Object> logData = new HashMap<>();
-        logData.put("action", "Enter");
-        logData.put("requestData", requestData);
-        logData.put("method", joinPoint.getSignature().toShortString());
-        logData.put("createdAt", LocalDateTime.now().toString());
+        logAsJson(joinPoint, requestData, "Enter");
 
+        Object responseData = joinPoint.proceed();
+        logAsJson(joinPoint, responseData, "Exit");
 
-        /// Log info before execute method
-        try {
-            String jsonData = mapper.writeValueAsString(logData);
-            log.info(jsonData);
-        } catch (JsonProcessingException e) {
-            log.error("Jackson failed converting data to JSON String: " + e.getMessage());
-        }
+        return responseData;
     }
 
-    private void logResponse(ProceedingJoinPoint joinPoint, Object result) {
-        /// Log info after execute method
+    private void logAsJson(ProceedingJoinPoint joinPoint, Object data, String action) {
         Map<String, Object> logData = new HashMap<>();
-        logData.put("action", "Exit");
-        logData.put("responseData", result);
+        logData.put("action", action);
+        logData.put("data", data);
         logData.put("method", joinPoint.getSignature().toShortString());
         logData.put("createdAt", LocalDateTime.now().toString());
 
         try {
-            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
             String jsonData = mapper.writeValueAsString(logData);
             log.info(jsonData);
         } catch (JsonProcessingException e) {
-            log.error("Jackson failed converting data to JSON String: " + e.getMessage());
+            log.error(JSON_PARSE_ERROR.formatted(e.getMessage()));
         }
     }
 }

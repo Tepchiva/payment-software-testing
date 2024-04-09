@@ -48,7 +48,7 @@ class PaymentServiceIntegrationTest {
         String customerDataAsString = customerRegisterResultActions.andReturn().getResponse().getContentAsString();
         SuccessResponse<CustomerResponse> responseSuccessResponse = objectMapper.readValue(customerDataAsString, new TypeReference<>() {});
         log.info("success response type of customer: {}", responseSuccessResponse);
-        CustomerResponse customerResponse = responseSuccessResponse.data();
+        CustomerResponse customerResponse = responseSuccessResponse.getData();
 
         // ... Payment request
         PaymentRequest paymentRequest = new PaymentRequest(
@@ -76,7 +76,7 @@ class PaymentServiceIntegrationTest {
         String paymentDataAsString = paymentResultActions.andReturn().getResponse().getContentAsString();
         SuccessResponse<PaymentResponse> paymentResponseSuccessResponse = objectMapper.readValue(paymentDataAsString, new TypeReference<>() {});
         log.info("success response type of payment: {}", paymentResponseSuccessResponse);
-        PaymentResponse paymentResponse = paymentResponseSuccessResponse.data();
+        PaymentResponse paymentResponse = paymentResponseSuccessResponse.getData();
 
         // ... Find payment in database
         ResultActions getPaymentResultActions = mockMvc.perform(get("/v1/payments/{id}", paymentResponse.id()));
