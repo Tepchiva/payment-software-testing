@@ -1,7 +1,17 @@
 package com.learning.paymentsoftwaretesting.exception;
 
-public record ErrorResponse(String code, String message, String traceId) {
-    ErrorResponse(AppException ex) {
-        this(ex.getCode(), ex.getMessage(), null);
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class ErrorResponse {
+    private String code;
+    private String message;
+    private String traceId;
+
+    public ErrorResponse(AppException ex) {
+        this.code = ex.getCode();
+        this.message = ex.getMessage();
     }
 }

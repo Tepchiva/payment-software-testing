@@ -25,11 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
 @Transactional
-@TestPropertySource(
-        properties = {
-                "stripe.enabled=false"
-        }
-)
+//@TestPropertySource(
+//        properties = {
+//                "stripe.enabled=false"
+//        }
+//)
 class PaymentServiceIntegrationTest {
 
     @Autowired
@@ -63,7 +63,7 @@ class PaymentServiceIntegrationTest {
         );
         // ... Expect success with status 201 (created)
         assertThat(customerResponseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        CustomerResponse customerResponse = Objects.requireNonNull(customerResponseEntity.getBody()).data();
+        CustomerResponse customerResponse = Objects.requireNonNull(customerResponseEntity.getBody()).getData();
 
         // ... Payment request
         PaymentRequest paymentRequest = new PaymentRequest(
@@ -86,9 +86,9 @@ class PaymentServiceIntegrationTest {
         assertThat(paymentResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         SuccessResponse<PaymentResponse> paymentResponseSuccessResponse = paymentResponseEntity.getBody();
         // ... Expect response code is SUC-000
-        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse).code()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
+        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse).getCode()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
         // ... Expect data id is not id
-        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse.data()).id()).isNotNull();
+        assertThat(Objects.requireNonNull(paymentResponseSuccessResponse.getData()).id()).isNotNull();
 
         // ... Find payment just make
         ResponseEntity<SuccessResponse<PaymentResponse>> getPaymentResponseEntity = restTemplate.exchange(
@@ -96,14 +96,14 @@ class PaymentServiceIntegrationTest {
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {},
-                Objects.requireNonNull(paymentResponseSuccessResponse.data()).id()
+                Objects.requireNonNull(paymentResponseSuccessResponse.getData()).id()
         );
 
         // ... Expect success with status 200
         assertThat(getPaymentResponseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         SuccessResponse<PaymentResponse> getPaymentResponseSuccessResponse = getPaymentResponseEntity.getBody();
         // ... Expect response code is SUC-000
-        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse).code()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
-        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse.data()).id()).isEqualTo(Objects.requireNonNull(paymentResponseSuccessResponse.data()).id());
+        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse).getCode()).isEqualTo(MessageResponseCode.SUCCESS.getCode());
+        assertThat(Objects.requireNonNull(getPaymentResponseSuccessResponse.getData()).id()).isEqualTo(Objects.requireNonNull(paymentResponseSuccessResponse.getData()).id());
     }
 }

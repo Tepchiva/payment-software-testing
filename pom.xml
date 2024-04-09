@@ -16,8 +16,11 @@
     <properties>
         <java.version>21</java.version>
         <jacoco.version>0.8.11</jacoco.version>
+        <micrometer.version>1.12.4</micrometer.version>
         <sonar.exclusions>**/schemas/**,**/config/**</sonar.exclusions>
         <sonar.coverage.exclusions>**/schemas/**,**/config/**</sonar.coverage.exclusions>
+        <sonar.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.exclusions>
+        <sonar.coverage.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <dependency>
@@ -103,6 +106,35 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jdbc</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>3.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-otlp</artifactId>
+            <version>${micrometer.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-logback-appender-1.0</artifactId>
+            <version>2.2.0-alpha</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -155,7 +187,7 @@
         <profile>
             <id>tdd</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <spring.profiles.active>tdd</spring.profiles.active>

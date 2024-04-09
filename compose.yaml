@@ -1,11 +1,71 @@
+version: '3'
 services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    container_name: otel-collector
+    restart: always
+    command:
+        - "--config=/etc/otelcol-contrib/config.yaml"
+    volumes:
+      - ./docker/collector/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - "1888:1888" # pprof extension
+      - "8888:8888" # Prometheus metrics exposed by the collector
+      - "8889:8889" # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4318:4318" # OTLP http receiver
+      - "4317:4317" # OTLP gRPC receiver
+
+    depends_on:
+      - jaeger-all-in-one
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    volumes:
+      - ./docker/grafana/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - 'grafana_storage:/var/lib/grafana'
+    ports:
+      - "3000:3000"
+
   postgres:
     container_name: blog_postgres_db
     image: 'postgres:16.0'
     environment:
-        POSTGRES_USER: 'admin'
-        POSTGRES_PASSWORD: 'admin'
-        POSTGRES_DB: 'payment_db'
-      
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'admin'
+      POSTGRES_DB: 'payment_db'
+
     ports:
-        - '5432:5432'
+      - '5432:5432'
+
+  jaeger-all-in-one:
+    image: jaegertracing/all-in-one:latest
+    restart: always
+    environment:
+      METRICS_STORAGE_TYPE: prometheus
+
+    ports:
+      - "16686:16686"
+      - "14268"
+      - "14250"
+      - "4317"
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+
+volumes:
+  grafana_storage: {}

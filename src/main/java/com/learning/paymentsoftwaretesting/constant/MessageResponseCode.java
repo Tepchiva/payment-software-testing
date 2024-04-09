@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum MessageResponseCode {
     SUCCESS("SUC-000", "Success", HttpStatus.OK),
-    ERROR("ERR-000", "Error", HttpStatus.INTERNAL_SERVER_ERROR),
+    INTERNAL_SERVER_ERROR("ERR-000", "Error", HttpStatus.INTERNAL_SERVER_ERROR),
     PHONE_NUMBER_ALREADY_REGISTERED("ERR-001", "Phone number [%s] already registered", HttpStatus.BAD_REQUEST),
     RESOURCE_NOT_FOUND("ERR-002", "%s resource not found", HttpStatus.NOT_FOUND),
     CURRENCY_NOT_SUPPORTED("ERR-003", "Currency [%s] not supported", HttpStatus.BAD_REQUEST),

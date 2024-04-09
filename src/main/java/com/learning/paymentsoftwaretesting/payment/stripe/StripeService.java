@@ -28,12 +28,7 @@ public class StripeService implements CardPaymentCharger {
     private final StripeApi stripeApi;
 
     @Value("${stripe.api-secret-key}")
-    private static String apiKey;
-
-    private static final RequestOptions requestOption = RequestOptions
-            .builder()
-            .setApiKey(apiKey)
-            .build();
+    private String apiKey;
 
     private final Long minAmount;
 
@@ -53,6 +48,11 @@ public class StripeService implements CardPaymentCharger {
         if (amountInCent < minAmount) {
             throw new AppException(MessageResponseCode.AMOUNT_BELOW_MINIMUM, minAmount.toString());
         }
+
+        final RequestOptions requestOption = RequestOptions
+                .builder()
+                .setApiKey(apiKey)
+                .build();
 
         ChargeCreateParams params = ChargeCreateParams
                 .builder()
