@@ -187,7 +187,7 @@
         <profile>
             <id>tdd</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <spring.profiles.active>tdd</spring.profiles.active>
