@@ -2,6 +2,13 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
     <appender name="OPEN_TELEMETRY"
               class="com.learning.paymentsoftwaretesting.config.OtlpSpanLogsAppender"
     >
@@ -10,7 +17,7 @@
         <captureMdcAttributes>*</captureMdcAttributes>
     </appender>
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="STDOUT"/>
         <appender-ref ref="OPEN_TELEMETRY"/>
     </root>
 </configuration>

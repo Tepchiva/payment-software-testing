@@ -22,8 +22,6 @@ public class OtlpSpanLogsAppender extends OpenTelemetryAppender {
                     .put("level", event.getLevel().toString())
                     .put("message", event.getFormattedMessage());
 
-            event.getMDCPropertyMap().forEach(currentSpan::setAttribute);
-
             currentSpan.addEvent("LogEvent", builder.build());
 
             if (Level.ERROR.equals(event.getLevel())) {
