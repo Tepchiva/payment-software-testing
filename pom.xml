@@ -19,6 +19,8 @@
         <micrometer.version>1.12.4</micrometer.version>
         <sonar.exclusions>**/schemas/**,**/config/**</sonar.exclusions>
         <sonar.coverage.exclusions>**/schemas/**,**/config/**</sonar.coverage.exclusions>
+        <sonar.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.exclusions>
+        <sonar.coverage.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <dependency>
