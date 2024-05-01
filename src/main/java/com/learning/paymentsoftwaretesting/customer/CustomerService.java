@@ -4,7 +4,6 @@ import com.learning.paymentsoftwaretesting.constant.MessageResponseCode;
 import com.learning.paymentsoftwaretesting.exception.AppException;
 import com.learning.paymentsoftwaretesting.mapper.CustomerMapper;
 import com.learning.paymentsoftwaretesting.utils.PhoneNumberValidator;
-import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;

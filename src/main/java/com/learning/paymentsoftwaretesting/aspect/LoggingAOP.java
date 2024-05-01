@@ -3,8 +3,7 @@ package com.learning.paymentsoftwaretesting.aspect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learning.paymentsoftwaretesting.exception.SuccessResponse;
-import io.micrometer.tracing.Span;
-import io.micrometer.tracing.Tracer;
+import io.opentelemetry.api.trace.Span;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -25,7 +24,6 @@ import java.util.Map;
 @Slf4j
 public class LoggingAOP {
 
-    private final Tracer tracer;
     private final ObjectMapper mapper;
     private static final String JSON_PARSE_ERROR = "Jackson failed converting data to JSON String: %s";
 
@@ -37,10 +35,7 @@ public class LoggingAOP {
     )
     public void setTraceResponse(Object responseResult) {
         if (responseResult instanceof ResponseEntity<?> responseEntityInstance && responseEntityInstance.getBody() instanceof SuccessResponse<?> successResponseInstance) {
-            Span span = tracer.currentSpan();
-            if (span != null) {
-                successResponseInstance.setTraceId(span.context().traceId());
-            }
+            successResponseInstance.setTraceId(Span.current().getSpanContext().getTraceId());
         }
     }
 
@@ -96,16 +91,8 @@ public class LoggingAOP {
    )
     public Object populateMDCProperties(ProceedingJoinPoint joinPoint) throws Throwable {
         // Get the current span
-        Span span = tracer.currentSpan();
-        if (span != null) {
-            // Put the trace information into the MDC
-            MDC.put("traceId", span.context().traceId());
-            MDC.put("spanId", span.context().spanId());
-            // If the span has a parent, put the parentSpanId into the MDC
-            if (span.context().parentId() != null) {
-                MDC.put("parentSpanId", span.context().parentId());
-            }
-        }
+       MDC.put("traceId", Span.current().getSpanContext().getTraceId());
+       MDC.put("spanId", Span.current().getSpanContext().getSpanId());
 
         Object proceed = joinPoint.proceed();
 
