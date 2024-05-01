@@ -17,8 +17,6 @@
         <java.version>21</java.version>
         <jacoco.version>0.8.11</jacoco.version>
         <micrometer.version>1.12.4</micrometer.version>
-        <sonar.exclusions>**/schemas/**,**/config/**</sonar.exclusions>
-        <sonar.coverage.exclusions>**/schemas/**,**/config/**</sonar.coverage.exclusions>
         <sonar.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.exclusions>
         <sonar.coverage.exclusions>**/schemas/**,**/config/**,**/exception/**,**/aspect/**</sonar.coverage.exclusions>
     </properties>
@@ -88,6 +86,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
             <scope>test</scope>
@@ -99,23 +102,12 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-docker-compose</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>3.2.4</version>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-otlp</artifactId>
-            <version>${micrometer.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
@@ -131,9 +123,9 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>io.opentelemetry.instrumentation</groupId>
-            <artifactId>opentelemetry-logback-appender-1.0</artifactId>
-            <version>2.2.0-alpha</version>
+            <groupId>io.opentelemetry.javaagent</groupId>
+            <artifactId>opentelemetry-javaagent</artifactId>
+            <version>2.3.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -149,6 +141,10 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                    <environmentVariables>
+                        <JAVA_TOOL_OPTIONS>-javaagent:${project.basedir}/src/main/resources/javaagent/opentelemetry-javaagent-2.3.0.jar</JAVA_TOOL_OPTIONS>
+                        <OTEL_JAVAAGENT_CONFIGURATION_FILE>${project.basedir}/src/main/resources/otel-javaagent.properties</OTEL_JAVAAGENT_CONFIGURATION_FILE>
+                    </environmentVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -170,6 +166,30 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>**javaagent/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-specific-dependency</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/main/resources/javaagent</outputDirectory>
+                            <includeArtifactIds>opentelemetry-javaagent</includeArtifactIds>
+                            <includeGroupIds>io.opentelemetry.javaagent</includeGroupIds>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -182,15 +202,6 @@
             </activation>
             <properties>
                 <spring.profiles.active>dev</spring.profiles.active>
-            </properties>
-        </profile>
-        <profile>
-            <id>tdd</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <spring.profiles.active>tdd</spring.profiles.active>
             </properties>
         </profile>
         <profile>

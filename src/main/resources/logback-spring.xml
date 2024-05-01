@@ -9,9 +9,7 @@
         </encoder>
     </appender>
 
-    <appender name="OPEN_TELEMETRY"
-              class="com.learning.paymentsoftwaretesting.config.OtlpSpanLogsAppender"
-    >
+    <appender name="OPEN_TELEMETRY" class="com.learning.paymentsoftwaretesting.config.SpanLogsAppender">
         <captureExperimentalAttributes>true</captureExperimentalAttributes>
         <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
         <captureMdcAttributes>*</captureMdcAttributes>
