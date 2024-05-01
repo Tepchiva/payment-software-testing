@@ -70,7 +70,7 @@ class PaymentServiceIntegrationTest {
                 customerResponse.id(),
                 BigDecimal.valueOf(100.00),
                 Currency.USD,
-                "x0x0x0x0",
+                "tok_visa",
                 "Payment from integration test."
         );
 
