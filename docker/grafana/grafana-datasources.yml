@@ -27,12 +27,31 @@ datasources:
     uid: jaeger
     jsonData:
       tracesToLogsV2:
-        datasourceUid: loki
-        spanStartTimeShift: '-1h'
-        spanEndTimeShift: '1h'
-        filterByTraceID: true
-        filterBySpanID: true
-        tags: [ { key: 'service', value: 'job' } ]
+        datasourceUid: 'loki'  # Must match the UID of the Loki data source
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        filterByTraceID: false # Enable filtering by trace ID
+        filterBySpanID: false  # Optionally enable filtering by span ID
+        customQuery: true  # Allow custom queries
+        query: '{job="payment-software-testing"} |="$${__trace.traceId}"'  # Query to match trace ID in logs
+      tracesToMetrics:
+        datasourceUid: 'prometheus'  # Must match the UID of the Prometheus data source
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        tags:
+          - { key: 'service.name', value: 'service' }
+          - { key: 'job' }
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+      spanBar:
+        type: 'None'
 
   - name: Loki
     type: loki

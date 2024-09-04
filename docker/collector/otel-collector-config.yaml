@@ -32,6 +32,14 @@ exporters:
   loki:
     endpoint: "http://loki:3100/loki/api/v1/push"
 
+  elasticsearch:
+    endpoints: [ "http://192.168.100.134:9200" ]
+    index: "logs-otel"
+    timeout: "30s"
+#    document_type: "_doc"
+#    sniff: false
+#    insecure: true
+
 # https://github.com/open-telemetry/opentelemetry-collector/blob/main/extension/README.md
 extensions:
   # responsible for responding to health check calls on behalf of the collector.
@@ -55,4 +63,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [loki]
+      exporters: [elasticsearch, loki]

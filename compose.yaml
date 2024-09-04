@@ -55,6 +55,15 @@ services:
     restart: always
     environment:
       METRICS_STORAGE_TYPE: prometheus
+      # Optional: Set the Prometheus server URL
+      PROMETHEUS_SERVER_URL: http://prometheus:9090
+      # Optional: Explicitly enable the SpanMetrics Connector
+      JAEGER_QUERY_SUPPORT_SPANMETRICS_CONNECTOR: "true"
+    command:
+      # Optional: Set the Prometheus server URL
+      - "--prometheus.server-url=http://prometheus:9090"
+      # Optional: Explicitly enable the SpanMetrics Connector
+      - "--prometheus.query.support-spanmetrics-connector=true"
 
     ports:
       - "16686:16686"
